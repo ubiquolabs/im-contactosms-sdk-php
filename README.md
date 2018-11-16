@@ -21,7 +21,7 @@ Ejemplo de creación de instancia del api:
 
 ```
 
-Para hacer llamadas al API pueden utilizarse los métodos `contacts()`, `groups()` y `messages()`  en el objeto de api, el formato de la respuesta es:
+Para hacer llamadas al API pueden utilizarse los métodos `contacts()`, `tags()` y `messages()`  en el objeto de api, el formato de la respuesta es:
 
 ```php
 
@@ -134,9 +134,17 @@ Ejemplos de llamadas al API:
         }
     }
 
+print("Getting tags...\n");
+  // $tags = $api->tags()->getTags($query=null, $limit=null,$start=null,$shortResults=null);
+$tags = $api->tags()->getTags();
+if ($tags->ok) {
+    echo "Mis Grupos son::\n";
+    foreach ($tags->data as $tag) echo $tag->name . "\n";
+} 
+
     
     $message = $api->messages()
-        ->sendToContact("50212345678", "Sent from PHP SDK");
+        ->sendToContact("50212345678", "Sent from PHP SDK","12345");
 
     if ($message->ok) echo "Mensaje enviado..."
 

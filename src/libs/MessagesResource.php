@@ -9,7 +9,7 @@ class MessagesResource extends ApiWrapper {
 
     
     public function getMessages($startDate,
-        $endDate,$limit=null,$start=null,$msisdn=null,$groupShortName=null){
+        $endDate,$limit=null,$start=null,$msisdn=null){
         $this->checkDate($startDate,1);
         $this->checkDate($endDate,1);
         $this->checkInteger($start);
@@ -19,11 +19,10 @@ class MessagesResource extends ApiWrapper {
             'limit' => $limit,
             'start' => $start,
             'msisdn' => $msisdn,
-            'group_short_name' => $groupShortName,
         ));
     }
 
-    public function sendToContact($msisdn,$message,$id=null){
+    public function sendToContact($msisdn,$message,$id){
         return $this->post("messages/send_to_contact",null,array(
             'msisdn' => $msisdn,
             'message' => $message,
@@ -31,10 +30,10 @@ class MessagesResource extends ApiWrapper {
         ));
     }
 
-    public function sendToGroups($groups,$message,$id=null){
-        $this->checkArray($groups);
+    public function sendToTag($tag,$message,$id){
+        $this->checkArray($tag);
         return $this->post("messages/send", null, array(
-            'groups' => $groups,
+            'tags' => $tag,
             'message' => $message,
             'id' => $id,
         ));

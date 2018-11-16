@@ -1,17 +1,20 @@
 <?php
 require_once("ApiWrapper.php");
 
-class ContactsResource extends ApiWrapper {
+class ContactsResource extends ApiWrapper
+{
 
-    function __construct($apiKey, $apiSecret, $apiUrl,$assoc){
-        parent::__construct($apiKey,$apiSecret,$apiUrl,$assoc);
+    function __construct($apiKey, $apiSecret, $apiUrl, $assoc)
+    {
+        parent::__construct($apiKey, $apiSecret, $apiUrl, $assoc);
     }
 
-    public function getContacts($query=null, $limit=null,$start=null,$status=null,$shortResults=null){
+    public function getContacts($query = null, $limit = null, $start = null, $status = null, $shortResults = null)
+    {
         $this->checkContactStatus($status);
         $this->checkInteger($start);
         $this->checkInteger($limit);
-        $this->checkInteger($shortResults,true);
+        $this->checkInteger($shortResults, true);
         return $this->get("contacts", array(
             'query' => $query,
             'limit' => $limit,
@@ -21,17 +24,29 @@ class ContactsResource extends ApiWrapper {
         ));
     }
 
-    public function getContactGroups($msisdn){
-        return $this->get("contacts/$msisdn/groups",array("msisdn" => $msisdn));
+    public function getContactGroups($msisdn)
+    {
+
+        return $this->get("contacts/$msisdn/groups", array("msisdn" => $msisdn));
     }
 
-    public function getContact($msisdn){
-        return $this->get("contacts/$msisdn");
+    public function getContact($msisdn)
+    {
+        return $this->get("contacts/$msisdn", array("msisdn" => $msisdn));
     }
 
-    public function createContact($phoneNumber, $countryCode, $firstName=null, $lastName = null, 
-        $field1=null,$field2=null, $field3=null, $field4=null, $field5=null){
-        $msisdn = $countryCode.$phoneNumber;
+    public function createContact(
+        $phoneNumber,
+        $countryCode,
+        $firstName = null,
+        $lastName = null,
+        $field1 = null,
+        $field2 = null,
+        $field3 = null,
+        $field4 = null,
+        $field5 = null
+    ) {
+        $msisdn = $countryCode . $phoneNumber;
         $body = array(
             'msisdn' => $msisdn,
             'phone_number' => $phoneNumber,
@@ -47,8 +62,18 @@ class ContactsResource extends ApiWrapper {
         return $this->post("contacts/$msisdn", array("msisdn" => $msisdn), $body);
     }
 
-    public function updateContact($msisdn, $phoneNumber=null, $countryCode=null, $firstName=null, $lastName = null, 
-        $field1=null,$field2=null, $field3=null, $field4=null, $field5=null){
+    public function updateContact(
+        $msisdn,
+        $phoneNumber = null,
+        $countryCode = null,
+        $firstName = null,
+        $lastName = null,
+        $field1 = null,
+        $field2 = null,
+        $field3 = null,
+        $field4 = null,
+        $field5 = null
+    ) {
         $body = array(
             'msisdn' => $msisdn,
             'phone_number' => $phoneNumber,
@@ -64,8 +89,25 @@ class ContactsResource extends ApiWrapper {
         return $this->put("contacts/$msisdn", array("msisdn" => $msisdn), $body);
     }
 
-    public function deleteContact($msisdn){
+    public function deleteContact($msisdn)
+    {
         return $this->delete("contacts/$msisdn", array("msisdn" => $msisdn));
+    }
+
+    public function addTagToContact($msisdn, $tagName)
+    {
+        return $this->post("contacts/$msisdn/tags/$tagName", array(
+            "tag_name" => $tagName,
+            "msisdn" => $msisdn,
+        ));
+    }
+
+    public function removeTagToContact($msisdn, $tagName)
+    {
+        return $this->delete("contacts/$msisdn/tags/$tagName", array(
+            "tag_name" => $tagName,
+            "msisdn" => $msisdn
+        ));
     }
 
 }
