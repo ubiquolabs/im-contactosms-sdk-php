@@ -122,20 +122,6 @@ Ejemplos de llamadas al API:
         }
     }
 
-
-    $groups = $api->groups()
-        ->getGroups("my group" /*$query*/, 0 /*$limit*/,0 /* $offset */,
-         false /*$shortResults*/);
-
-    if ($groups->ok){
-        echo "Mis grupos\n";
-        foreach ($groups->data as $group){
-            echo " Grupo: $group->name, miembros: {$group->members->total}\n";
-        }
-    }
-
-print("Getting tags...\n");
-  // $tags = $api->tags()->getTags($query=null, $limit=null,$start=null,$shortResults=null);
 $tags = $api->tags()->getTags();
 if ($tags->ok) {
     echo "Mis Grupos son::\n";
