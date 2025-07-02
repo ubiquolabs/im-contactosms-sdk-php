@@ -1,70 +1,111 @@
 <?php
-include("../src/SmsApi.php");
+/**
+ * Tags example for the SMS API
+ * This example demonstrates how to work with tags: retrieving, managing tag contacts, and tag operations
+ */
 
-define('API_KEY', 'Your api key');
-define('API_SECRET', 'Your api secret');
-define('API_URL', 'Your api url');
+require_once("../src/SmsApi.php");
 
+// Your API credentials
+define('API_KEY', 'YOUR_API_KEY');
+define('API_SECRET', 'YOUR_API_SECRET');
+define('API_URL', 'YOUR_API_URL');
 
-$api = new SmsApi(API_KEY, API_SECRET, API_URL, false /* Now I want objects... did you want array? change last parameter to true */ );
+// Initialize the API client with array responses
+$api = new SmsApi(API_KEY, API_SECRET, API_URL, true);
 
-// Response format:
-// $response = [
-//     'status' => 'OK',
-//     'code' => '200',
-//     'headers' => [/* the headers */]
-//     'data' => [/*the data*/]
-// ];
+/**
+ * Example 1: Get all tags
+ */
+echo "Getting tags...\n";
+$response = $api->tags()->getTags(
+    null,   // query (optional)
+    10,     // limit (optional)
+    0,      // start (optional)
+    false   // shortResults (optional)
+);
 
-
-print("Getting tags...\n");
-  // $tags = $api->tags()->getTags($query=null, $limit=null,$start=null,$shortResults=null);
-$tags = $api->tags()->getTags();
-if ($tags->ok) {
-    echo "My tags are:\n";
-    foreach ($tags->data as $tag) echo $tag->name . "\n";
+if ($response['ok']) {
+    echo "Tags retrieved successfully:\n";
+    foreach ($response['data'] as $tag) {
+        echo $tag['name'] . "\n";
+    }
 } else {
-    echo "Something went wrong, status {$tag->status} here is the dump!\n";
-    var_dump($tags);
+    echo "Failed to get tags. Error: " . ($response['data']['error'] ?? 'Unknown error') . "\n";
 }
 
-
-print("Getting tag test...\n");
-  // $api->tags()->getByShortName($short_name);
-$tag = $api->tags()->getByShortName("test");
-if ($tag->ok) echo "My tag: {$tag->data->name}\n";
-else echo "No tag :\n";
-
-// $api->tags()->getTagContacts($shortName,$limit,$offset,$status,$shortResponse);
-echo "Getting tag contacts:\n";
-$response = $api->tags()->getTagContacts("test");
-if ($response->ok){foreach ($response->data as $contact) echo"{$contact->msisdn} {$contact->full_name} \n";
- }
-
-//foreach ($response['data'] as $contact) {
-//echo "{$contact["full_name"]} {$contact["msisdn"]}\n";
-else {
-    echo "Data not found";
+/**
+ * Example 2: Get specific tag
+ */
+echo "\nGetting tag 'test'...\n";
+$response = $api->tags()->getByShortName("test");
+if ($response['ok']) {
+    echo "Tag found: " . $response['data']['name'] . "\n";
+} else {
+    echo "Failed to get tag. Error: " . ($response['data']['error'] ?? 'Unknown error') . "\n";
 }
 
-print("Add Tag to contact...\n");
-// $api->contacts()->addTagToContact($msisdn, $tag_name);
-$response = $api->contacts()->addTagToContact('50212345678', "test_sdk_php");
-if ($response->ok) echo "Tag added!\n";
-else echo "Failed to add tag with status code $response->code\n";
+/**
+ * Example 3: Get tag contacts
+ */
+echo "\nGetting contacts for tag 'test'...\n";
+$response = $api->tags()->getTagContacts(
+    "test",     // shortName
+    10,         // limit (optional)
+    0,          // offset (optional)
+    null,       // status (optional)
+    false       // shortResponse (optional)
+);
 
+if ($response['ok']) {
+    echo "Tag contacts retrieved successfully:\n";
+    foreach ($response['data'] as $contact) {
+        echo $contact['msisdn'] . " - " . $contact['full_name'] . "\n";
+    }
+} else {
+    echo "Failed to get tag contacts. Error: " . ($response['data']['error'] ?? 'Unknown error') . "\n";
+}
 
-print("Remove Tag to contact...\n");
-// $api->contacts()->removeTagToContact($msisdn, $tag_name);
-$response = $api->contacts()->removeTagToContact('50230593400', "test");
-if ($response->ok) echo "Tag removed!\n";
-else echo "Failed to remove tag with status code $response->code\n";
+/**
+ * Example 4: Add tag to contact
+ */
+echo "\nAdding tag to contact...\n";
+$response = $api->contacts()->addTagToContact(
+    '50212345678',    // msisdn
+    "test_sdk_php"    // tag_name
+);
 
-print("Deleting tag...\n");
-// $api->groups()->deleteTag($shortname);
+if ($response['ok']) {
+    echo "Tag added successfully!\n";
+} else {
+    echo "Failed to add tag. Error: " . ($response['data']['error'] ?? 'Unknown error') . "\n";
+}
+
+/**
+ * Example 5: Remove tag from contact
+ */
+echo "\nRemoving tag from contact...\n";
+$response = $api->contacts()->removeTagToContact(
+    '50230593400',    // msisdn
+    "test"            // tag_name
+);
+
+if ($response['ok']) {
+    echo "Tag removed successfully!\n";
+} else {
+    echo "Failed to remove tag. Error: " . ($response['data']['error'] ?? 'Unknown error') . "\n";
+}
+
+/**
+ * Example 6: Delete tag
+ */
+echo "\nDeleting tag...\n";
 $response = $api->tags()->deleteTag("newgroup");
-if ($response->ok) echo "Tag deleted\n";
-else echo "Failed to delete group with status code $response->code\n";
+if ($response['ok']) {
+    echo "Tag deleted successfully!\n";
+} else {
+    echo "Failed to delete tag. Error: " . ($response['data']['error'] ?? 'Unknown error') . "\n";
+}
 
 
 

@@ -1,34 +1,70 @@
 <?php
+/**
+ * Messages example for the SMS API
+ * This example demonstrates how to work with messages: retrieving, sending to contacts, and sending to tags
+ */
+
 date_default_timezone_set("America/Guatemala");
-include("../src/SmsApi.php");
+require_once("../src/SmsApi.php");
 
+// Your API credentials
+define('API_KEY', 'YOUR_API_KEY');
+define('API_SECRET', 'YOUR_API_SECRET');
+define('API_URL', 'YOUR_API_URL');
 
-define('API_KEY', 'Your api key');
-define('API_SECRET', 'Your api secret');
-define('API_URL', 'Your api url');
+// Initialize the API client with array responses
+$api = new SmsApi(API_KEY, API_SECRET, API_URL, true);
 
-$api = new SmsApi(API_KEY, API_SECRET, API_URL, false);
+/**
+ * Example 1: Get messages
+ */
+echo "Getting messages...\n";
+$response = $api->messages()->getMessages(
+    "2015-03-01",  // start date
+    "2015-03-10",  // end date
+    10,            // limit (optional)
+    0,             // start (optional)
+    null,          // msisdn (optional)
+    null           // groupShortName (optional)
+);
 
-
-print ("Getting messages...");
-// $api->messages()->getMessages($startDate,$endDate,$limit=null,$start=null,$msisdn=null,$groupShortName=null);
-$response = $api->messages()->getMessages("2015-03-01", "2015-03-10");
-if ($response->status == "OK"){
-    foreach ($response->data as $message) echo $message->message."\n";
+if ($response['ok']) {
+    echo "Messages retrieved successfully:\n";
+    foreach ($response['data'] as $message) {
+        echo $message['message'] . "\n";
+    }
+} else {
+    echo "Failed to get messages. Error: " . ($response['data']['error'] ?? 'Unknown error') . "\n";
 }
-else echo "Failed to get messages with status code $response->code\n";
 
+/**
+ * Example 2: Send message to contact
+ */
+echo "\nSending message to contact...\n";
+$response = $api->messages()->sendToContact(
+    "50245858369",     // msisdn
+    "Sent from PHP SDK", // message
+    "123"              // id (optional)
+);
 
+if ($response['ok']) {
+    echo "Message sent successfully!\n";
+} else {
+    echo "Failed to send message. Error: " . ($response['data']['error'] ?? 'Unknown error') . "\n";
+}
 
-print ("Sending message to contact...");
-// $api->messages()->sendToContact($msisdn,$message,$id=null);
-$response = $api->messages()->sendToContact("50212345678", "Sent from PHP SDK","123");
-if ($response->status == "OK") echo "I sent a message!\n";
-else echo "Failed to send message with status code $response->code\n";
+/**
+ * Example 3: Send message to tag
+ */
+echo "\nSending message to tag...\n";
+$response = $api->messages()->sendToTag(
+    ["test"],          // groups array
+    "Test message to group", // message
+    "12434"            // id (optional)
+);
 
-
-print ("Sending message to tag...");
-// $api->messages()->sendToTag(array $groups, $message, $id=null);
-$response = $api->messages()->sendToTag(array("test"), "Test message to group","12434");
-if ($response->status == "OK") echo "I sent a message to the test tag!";
-else echo "Failed to send a message to group with status code $response->code\n";
+if ($response['ok']) {
+    echo "Message sent to tag successfully!\n";
+} else {
+    echo "Failed to send message to tag. Error: " . ($response['data']['error'] ?? 'Unknown error') . "\n";
+}
