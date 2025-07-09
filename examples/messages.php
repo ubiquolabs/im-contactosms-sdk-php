@@ -41,10 +41,15 @@ if ($response['ok']) {
  * Example 2: Send message to contact
  */
 echo "\nSending message to contact...\n";
+$params = [
+    "msisdn" => "502123456789",
+    "message" => "Hello from PHP SDK",
+    "id" => "custom-id-" . uniqid()
+];
 $response = $api->messages()->sendToContact(
-    "50245858369",     // msisdn
-    "Sent from PHP SDK", // message
-    "123"              // id (optional)
+    $params["msisdn"],     // msisdn
+    $params["message"], // message
+    $params["id"]              // id (optional)
 );
 
 if ($response['ok']) {

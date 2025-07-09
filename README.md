@@ -61,7 +61,7 @@ if ($response['ok']) {
 #### Get Contacts
 ```php
 $response = $api->contacts()->getContacts(
-    '12345678',     // query (phone number or name)
+    '50212345678',     // query (phone number or name)
     10,             // limit (optional)
     0,              // start (optional)
     'SUSCRIBED'     // status (optional)
@@ -130,7 +130,7 @@ if ($response['ok']) {
 $response = $api->messages()->sendToTag(
     ["test"],          // groups array
     "Your message",    // message
-    "123"             // id (optional)
+    "123aeiou"             // id (optional)
 );
 
 if ($response['ok']) {
