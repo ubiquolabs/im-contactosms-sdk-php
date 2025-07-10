@@ -8,7 +8,7 @@
 date_default_timezone_set("America/Guatemala");
 
 // Include the SDK
-require_once("../src/SmsApi.php");
+require_once(__DIR__ . "/../src/SmsApi.php");
 
 // Your API credentials
 define('API_KEY', 'YOUR_API_KEY');
@@ -58,7 +58,10 @@ echo "\nGetting messages...\n";
 $response = $api->messages()->getMessages(
     date('Y-m-d', strtotime('-7 days')),  // start date (7 days ago)
     date('Y-m-d'),                        // end date (today)
-    10                                    // limit
+    10,                                   // limit
+    null,                                 // start
+    null,                                 // msisdn
+    true                                  // deliveryStatusEnable
 );
 
 if ($response['ok']) {

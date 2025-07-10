@@ -4,7 +4,7 @@
  * This example demonstrates how to work with tags: retrieving, managing tag contacts, and tag operations
  */
 
-require_once("../src/SmsApi.php");
+require_once(__DIR__ . "/../src/SmsApi.php");
 
 // Your API credentials
 define('API_KEY', 'YOUR_API_KEY');
@@ -37,8 +37,8 @@ if ($response['ok']) {
 /**
  * Example 2: Get specific tag
  */
-echo "\nGetting tag 'test'...\n";
-$response = $api->tags()->getByShortName("test");
+echo "\nGetting tag 'tag_name'...\n";
+$response = $api->tags()->getByShortName("tag_name");
 if ($response['ok']) {
     echo "Tag found: " . $response['data']['name'] . "\n";
 } else {
@@ -48,9 +48,9 @@ if ($response['ok']) {
 /**
  * Example 3: Get tag contacts
  */
-echo "\nGetting contacts for tag 'test'...\n";
+echo "\nGetting contacts for tag 'tag_name'...\n";
 $response = $api->tags()->getTagContacts(
-    "test",     // shortName
+    "tag_name",     // shortName
     10,         // limit (optional)
     0,          // offset (optional)
     null,       // status (optional)
@@ -72,7 +72,7 @@ if ($response['ok']) {
 echo "\nAdding tag to contact...\n";
 $response = $api->contacts()->addTagToContact(
     '50212345678',    // msisdn
-    "test_sdk_php"    // tag_name
+    "tag_name_sdk_php"    // tag_name
 );
 
 if ($response['ok']) {
@@ -86,8 +86,8 @@ if ($response['ok']) {
  */
 echo "\nRemoving tag from contact...\n";
 $response = $api->contacts()->removeTagToContact(
-    '50230593400',    // msisdn
-    "test"            // tag_name
+    '50212345678',    // msisdn
+    "tag_name"            // tag_name
 );
 
 if ($response['ok']) {
@@ -100,7 +100,7 @@ if ($response['ok']) {
  * Example 6: Delete tag
  */
 echo "\nDeleting tag...\n";
-$response = $api->tags()->deleteTag("newgroup");
+$response = $api->tags()->deleteTag("tag_name");
 if ($response['ok']) {
     echo "Tag deleted successfully!\n";
 } else {

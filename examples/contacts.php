@@ -4,7 +4,7 @@
  * This example demonstrates how to work with contacts: creating, retrieving, updating, and managing contact tags
  */
 
-require_once("../src/SmsApi.php");
+require_once(__DIR__ . "/../src/SmsApi.php");
 
 // Your API credentials
 define('API_KEY', 'YOUR_API_KEY');
@@ -19,7 +19,7 @@ $api = new SmsApi(API_KEY, API_SECRET, API_URL, true);
  */
 echo "Creating contact...\n";
 $response = $api->contacts()->createContact(
-    "59824",    // phone number
+    "1234567890",    // phone number
     "502",      // country code
     "prueba",   // first name
     null,       // last name (optional)

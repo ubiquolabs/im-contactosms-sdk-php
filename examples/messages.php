@@ -5,7 +5,7 @@
  */
 
 date_default_timezone_set("America/Guatemala");
-require_once("../src/SmsApi.php");
+require_once(__DIR__ . "/../src/SmsApi.php");
 
 // Your API credentials
 define('API_KEY', 'YOUR_API_KEY');
@@ -20,12 +20,12 @@ $api = new SmsApi(API_KEY, API_SECRET, API_URL, true);
  */
 echo "Getting messages...\n";
 $response = $api->messages()->getMessages(
-    "2015-03-01",  // start date
-    "2015-03-10",  // end date
+    "2025-07-01",  // start date
+    "2025-07-10",  // end date
     10,            // limit (optional)
     0,             // start (optional)
     null,          // msisdn (optional)
-    null           // groupShortName (optional)
+    true           // deliveryStatusEnable (optional)
 );
 
 if ($response['ok']) {
