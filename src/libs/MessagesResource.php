@@ -9,17 +9,24 @@ class MessagesResource extends ApiWrapper {
 
     
     public function getMessages($startDate,
-        $endDate,$limit=null,$start=null,$msisdn=null){
+        $endDate,$limit=null,$start=null,$msisdn=null, $deliveryStatusEnable = false){
         $this->checkDate($startDate,1);
         $this->checkDate($endDate,1);
         $this->checkInteger($start);
-        return $this->get("messages", array(
+
+        $params = array(
             'start_date' => $startDate,
             'end_date' => $endDate,
             'limit' => $limit,
             'start' => $start,
             'msisdn' => $msisdn,
-        ));
+        );
+
+        if ($deliveryStatusEnable) {
+            $params['delivery_status_enable'] = 'true';
+        }
+
+        return $this->get("messages", $params);
     }
 
     public function sendToContact($msisdn,$message,$id){

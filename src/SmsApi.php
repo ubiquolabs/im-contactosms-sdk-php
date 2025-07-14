@@ -7,7 +7,7 @@ require_once("libs/MessagesResource.php");
 class SmsApi {
 
     var $contactsResource;
-    var $groupsResource;
+    var $tagsResource;
     var $messagesResource;
 
     function __construct($apiKey, $apiSecret, $apiUrl,$assoc=false){
