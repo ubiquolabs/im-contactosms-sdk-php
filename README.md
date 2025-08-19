@@ -1,6 +1,6 @@
 # SMS API PHP SDK
 
-A PHP SDK for interacting with the SMS API service. This SDK provides easy-to-use methods for managing contacts, sending messages, and handling tags.
+A PHP SDK for interacting with the SMS API service. This SDK provides easy-to-use methods for managing contacts, sending messages, and handling tags with **perfect UTF-8 character support** 
 
 ## Requirements
 
@@ -110,11 +110,12 @@ if ($response['ok']) {
 
 ### Message Management
 
-#### Send Message to Contact
+#### Send Message to Contact with UTF-8 Support
 ```php
+// Perfect UTF-8 character support - send messages with special characters
 $response = $api->messages()->sendToContact(
     "50212345678",     // msisdn
-    "Your message",    // message
+    "¡Hola! ¿Cómo estás? Café ñoño 🚀",    // message with UTF-8 characters
     "123"             // id (optional)
 );
 
@@ -123,6 +124,24 @@ if ($response['ok']) {
 } else {
     echo "Failed to send message. Error: " . ($response['data']['error'] ?? 'Unknown error') . "\n";
 }
+```
+
+#### UTF-8 Character Examples
+
+The PHP SDK now perfectly handles all UTF-8 characters, just like JavaScript and Python:
+
+```php
+// Spanish characters
+"¡Hola! ¿Cómo estás? Adiós"
+
+// Accented letters
+"Café, niño, corazón, piñata"
+
+// Symbols and currency
+"Precio: €50, £40, ¥100, $30"
+
+// Mathematical symbols
+"Infinito: ∞, Plus/Minus: ±, Square root: √"
 ```
 
 #### Send Message to Tag
@@ -261,13 +280,37 @@ if ($response['ok']) {
 }
 ```
 
-## Examples
+## 🌍 UTF-8 and Cross-SDK Compatibility
+
+This PHP SDK provides **perfect UTF-8 character handling**, matching the behavior of JavaScript and Python SDKs:
+
+### ✅ What Works Perfectly
+- **Spanish characters**: `¡¿` (inverted punctuation)
+- **Accented letters**: `áéíóú ñÑ`
+- **Currency symbols**: `€¢£¥`
+- **Mathematical symbols**: `∞±√`
+- **Emojis**: `🚀🎉💻`
+- **All Unicode characters**
+
+### 🔧 Technical Implementation
+- **JSON Serialization**: Uses `JSON_UNESCAPED_UNICODE` (equivalent to Python's `ensure_ascii=False`)
+- **HTTP Headers**: Proper `Content-Type: application/json; charset=utf-8`
+- **Character Encoding**: UTF-8 throughout the entire request/response cycle
+
+### 🤝 Cross-SDK Compatibility
+The PHP SDK now generates identical:
+- **HTTP signatures** as JavaScript and Python SDKs
+- **JSON payloads** without character escaping
+- **API requests** with consistent UTF-8 encoding
+
+## Examples and Testing
 
 Check the `/examples` directory for complete working examples:
 - `quickstart.php`: Basic operations (create contact, send message, get messages)
 - `contacts.php`: Contact management examples
-- `messages.php`: Message handling examples
+- `messages.php`: Message handling examples with UTF-8 characters
 - `tags.php`: Tag management examples
+- `utf8_test.php`: **Comprehensive UTF-8 testing** (recommended for verification)
 
 ## Support
 
