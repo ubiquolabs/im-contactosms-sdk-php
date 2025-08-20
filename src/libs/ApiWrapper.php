@@ -60,7 +60,8 @@ class ApiWrapper {
     public function getBodyString($body){
         if ($body) {
             if (!is_array($body) && !is_object($body)) throw new Exception('expected array or object in $body');
-            $body = json_encode(array_filter($body,"notEmptyValue"));
+            // Use JSON_UNESCAPED_UNICODE to preserve UTF-8 characters (like Python's ensure_ascii=False)
+            $body = json_encode(array_filter($body,"notEmptyValue"), JSON_UNESCAPED_UNICODE);
         }
         return $body;
     }
@@ -98,7 +99,7 @@ class ApiWrapper {
         $hash = hash_hmac("sha1",$authentication, $this->apiSecret,true);
         $hash = base64_encode($hash);
         $headers = array(
-            "Content-type: application/json",
+            "Content-type: application/json; charset=utf-8",
             "Date: $datetime",
             "Authorization: IM $this->apiKey:$hash",
             "X-IM-ORIGIN: IM_SDK_PHP",

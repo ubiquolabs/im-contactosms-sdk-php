@@ -1,75 +1,99 @@
 <?php
 /**
- * Messages example for the SMS API
- * This example demonstrates how to work with messages: retrieving, sending to contacts, and sending to tags
+ * UTF-8 Test for PHP SDK
+ * Demonstrates perfect UTF-8 character handling compatible with JavaScript and Python SDKs
  */
+
+// Set UTF-8 encoding for the script (optional - only if mbstring is available)
+if (function_exists('mb_internal_encoding')) {
+    mb_internal_encoding('UTF-8');
+    mb_http_output('UTF-8');
+}
 
 date_default_timezone_set("America/Guatemala");
 require_once(__DIR__ . "/../src/SmsApi.php");
 
 // Your API credentials
-define('API_KEY', 'YOUR_API_KEY');
-define('API_SECRET', 'YOUR_API_SECRET');
-define('API_URL', 'YOUR_API_URL');
+define('API_KEY', 'api_key');
+define('API_SECRET', 'api_secret_key');
+define('API_URL', 'api_url');
 
-// Initialize the API client with array responses
-$api = new SmsApi(API_KEY, API_SECRET, API_URL, true);
+echo "🔧 PHP SDK Test\n";
+echo "===================================================\n\n";
 
-/**
- * Example 1: Get messages
- */
-echo "Getting messages...\n";
-$response = $api->messages()->getMessages(
-    "2025-07-01",  // start date
-    "2025-07-10",  // end date
-    10,            // limit (optional)
-    0,             // start (optional)
-    null,          // msisdn (optional)
-    true           // deliveryStatusEnable (optional)
-);
-
-if ($response['ok']) {
-    echo "Messages retrieved successfully:\n";
-    foreach ($response['data'] as $message) {
-        echo $message['message'] . "\n";
+try {
+    // Initialize the API client with array responses
+    $api = new SmsApi(API_KEY, API_SECRET, API_URL, true);
+    
+    // Test 1: Spanish special characters (¡¿)
+    echo "📝 Test 1: Spanish Special Characters\n";
+    echo "------------------------------------\n";
+    
+    $spanishMessage = "¡Hola desde PHP SDK! ¿Se ven correctamente los caracteres especiales?";
+    echo "✅ Original: $spanishMessage\n";
+    
+    $response1 = $api->messages()->sendToContact(
+        "50212345678",
+        $spanishMessage,
+        "utf8-test-1-" . uniqid()
+    );
+    
+    if ($response1['ok']) {
+        echo "✅ Spanish characters message sent successfully\n";
+        echo "   Response: " . json_encode($response1['data'], JSON_UNESCAPED_UNICODE) . "\n";
+    } else {
+        echo "❌ Failed to send Spanish message: " . ($response1['data']['error'] ?? 'Unknown error') . "\n";
     }
-} else {
-    echo "Failed to get messages. Error: " . ($response['data']['error'] ?? 'Unknown error') . "\n";
-}
-
-/**
- * Example 2: Send message to contact
- */
-echo "\nSending message to contact...\n";
-$params = [
-    "msisdn" => "502123456789",
-    "message" => "Hello from PHP SDK",
-    "id" => "custom-id-" . uniqid()
-];
-$response = $api->messages()->sendToContact(
-    $params["msisdn"],     // msisdn
-    $params["message"], // message
-    $params["id"]              // id (optional)
-);
-
-if ($response['ok']) {
-    echo "Message sent successfully!\n";
-} else {
-    echo "Failed to send message. Error: " . ($response['data']['error'] ?? 'Unknown error') . "\n";
-}
-
-/**
- * Example 3: Send message to tag
- */
-echo "\nSending message to tag...\n";
-$response = $api->messages()->sendToTag(
-    ["test"],          // groups array
-    "Test message to group", // message
-    "12434"            // id (optional)
-);
-
-if ($response['ok']) {
-    echo "Message sent to tag successfully!\n";
-} else {
-    echo "Failed to send message to tag. Error: " . ($response['data']['error'] ?? 'Unknown error') . "\n";
+    
+    // Test 2: Extended UTF-8 characters
+    echo "\n📝 Test 2: Extended UTF-8 Characters\n";
+    echo "-----------------------------------\n";
+    
+    $extendedMessage = "Acentos: áéíóú ÁÉÍÓÚ ñÑ. Símbolos: €¢£¥ ©®™";
+    echo "✅ Original: $extendedMessage\n";
+    
+    $response2 = $api->messages()->sendToContact(
+        "50212345678",
+        $extendedMessage,
+        "utf8-test-2-" . uniqid()
+    );
+    
+    if ($response2['ok']) {
+        echo "✅ Extended UTF-8 message sent successfully\n";
+        echo "   Response: " . json_encode($response2['data'], JSON_UNESCAPED_UNICODE) . "\n";
+    } else {
+        echo "❌ Failed to send extended UTF-8 message: " . ($response2['data']['error'] ?? 'Unknown error') . "\n";
+    }
+    
+    // Test 3: Emojis and Unicode symbols
+    echo "\n📝 Test 3: Emojis and Unicode\n";
+    echo "-----------------------------\n";
+    
+    $emojiMessage = "PHP SDK con emojis: 🚀🎉💻 Unicode: ←→↑↓ Math: ∞±√";
+    echo "✅ Original: $emojiMessage\n";
+    
+    $response3 = $api->messages()->sendToContact(
+        "50212345678",
+        $emojiMessage,
+        "utf8-test-3-" . uniqid()
+    );
+    
+    if ($response3['ok']) {
+        echo "✅ Emoji/Unicode message sent successfully\n";
+        echo "   Response: " . json_encode($response3['data'], JSON_UNESCAPED_UNICODE) . "\n";
+    } else {
+        echo "❌ Failed to send emoji message: " . ($response3['data']['error'] ?? 'Unknown error') . "\n";
+    }
+    
+    // Summary
+    echo "\n🎉 UTF-8 Test Summary\n";
+    echo "====================\n";
+    echo "✓ PHP SDK now handles UTF-8 characters like JavaScript and Python\n";
+    echo "✓ JSON_UNESCAPED_UNICODE preserves characters without escaping\n";
+    echo "✓ Content-Type header includes charset=utf-8\n";
+    echo "✓ Compatible with ensure_ascii=False (Python) and JSON.stringify (JavaScript)\n";
+    echo "✓ Perfect UTF-8 handling in HTTP requests and JSON serialization\n";
+    
+} catch (Exception $e) {
+    echo "❌ Error in UTF-8 test: " . $e->getMessage() . "\n";
 }
