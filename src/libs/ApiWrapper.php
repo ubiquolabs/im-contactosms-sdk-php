@@ -68,34 +68,36 @@ class ApiWrapper {
 
     public function get($endpoint, $params=null){
         $url = $this->apiUrl.$endpoint;
-        $params = $this->getParamsString($params);
-        return $this->send($url,$params, 'GET', null);
+        $paramsString = $this->getParamsString($params);
+        return $this->send($url,$paramsString, 'GET', null);
     }
 
     public function post($endpoint, $params=null, $body=null){
         $url = $this->apiUrl.$endpoint;
-        $params = $this->getParamsString($params);
-        $body = $this->getBodyString($body);
-        return $this->send($url,$params, 'POST', $body);
+        $paramsString = $this->getParamsString($params);
+        $bodyString = $this->getBodyString($body);
+        return $this->send($url,$paramsString, 'POST', $bodyString);
     }
 
     public function put($endpoint, $params=null, $body=null){
         $url = $this->apiUrl.$endpoint;
-        $params = $this->getParamsString($params);
-        $body = $this->getBodyString($body);
-        return $this->send($url,$params, 'PUT', $body);
+        $paramsString = $this->getParamsString($params);
+        $bodyString = $this->getBodyString($body);
+        return $this->send($url,$paramsString, 'PUT', $bodyString);
     }
 
     public function delete($endpoint, $params=null){
         $url = $this->apiUrl.$endpoint;
-        $params = $this->getParamsString($params);
-        return $this->send($url,$params, 'DELETE', null);
+        $paramsString = $this->getParamsString($params);
+        return $this->send($url,$paramsString, 'DELETE', null);
     }
 
     public function send($url, $params, $method, $body){
         if ($params) $url = $url."?".$params;
         $datetime = gmdate("D, d M Y H:i:s T");
-        $authentication = $this->apiKey.$datetime.$params.$body;
+        $paramsStr = $params ? $params : '';
+        $bodyStr = $body ? $body : '';
+        $authentication = $this->apiKey.$datetime.$paramsStr.$bodyStr;
         $hash = hash_hmac("sha1",$authentication, $this->apiSecret,true);
         $hash = base64_encode($hash);
         $headers = array(
@@ -103,6 +105,7 @@ class ApiWrapper {
             "Date: $datetime",
             "Authorization: IM $this->apiKey:$hash",
             "X-IM-ORIGIN: IM_SDK_PHP",
+            "Accept-Encoding: gzip, deflate",
         );
         
         $options = array(
@@ -115,20 +118,52 @@ class ApiWrapper {
         );
         $context = stream_context_create($options);
         $data = file_get_contents($url,false, $context);
-        $json = json_decode($data,$this->assoc);
+        $rawBody = $data;
+
+        $contentEncoding = null;
+        foreach ($http_response_header as $headerLine) {
+            if (stripos($headerLine, 'Content-Encoding:') === 0) {
+                $contentEncoding = trim(substr($headerLine, strlen('Content-Encoding:')));
+                break;
+            }
+        }
+
+        if ($data !== false && $contentEncoding && stripos($contentEncoding, 'gzip') !== false) {
+            $decodedData = @gzdecode($data);
+            if ($decodedData !== false) {
+                $data = $decodedData;
+            }
+        }
+
+        $decoded = null;
+        $utf8Body = $data;
+        if ($data !== false) {
+            $decoded = json_decode($data,$this->assoc);
+            if (json_last_error() === JSON_ERROR_UTF8) {
+                if (function_exists('mb_convert_encoding')) {
+                    $utf8Body = mb_convert_encoding($data, 'UTF-8', 'UTF-8, ISO-8859-1, ISO-8859-15');
+                } elseif (function_exists('iconv')) {
+                    $utf8Body = iconv('ISO-8859-1', 'UTF-8', $data);
+                } else {
+                    $utf8Body = $data;
+                }
+                $decoded = json_decode($utf8Body, $this->assoc);
+            }
+        }
         $has_code = preg_match('/\ (\d+)\ /', $http_response_header[0], $response_code);
         if ($has_code) $response_code = $response_code[1];
         else $response_code = null;
         $has_status = preg_match('/\ ([^\ ]+)$/', $http_response_header[0], $status);
         if ($has_status) $status = $status[1];
-        $data = array(
+        $result = array(
             'code' => $response_code+0,
             'status' => $status,
             'ok' => $status=="OK",
             'response_headers' => $http_response_header,
-            'data' => $json,
+            'raw_body' => $rawBody,
+            'body_utf8' => $utf8Body,
+            'data' => $decoded,
         );
-        var_dump($data);
-        return $this->assoc?$data:(object)$data;
+        return $this->assoc?$result:(object)$result;
     }
 }

@@ -2,6 +2,22 @@
 
 A PHP SDK for interacting with the SMS API service. This SDK provides easy-to-use methods for managing contacts, sending messages, handling tags, and creating shortlinks with perfect UTF-8 character support.
 
+## Rate Limits
+
+The API has rate limits to ensure fair usage:
+
+- **Shortlinks**: Maximum of 10 shortlinks created per minute per account (default)
+- When you exceed the limit, you'll receive a 403 error with code `42900`
+- **For inquiries or requests to increase the limit**: Please contact Technical Support directly through their support channels
+
+Example error response:
+```json
+{
+  "code": 42900,
+  "error": "Ha excedido el límite de solicitudes. Intente nuevamente más tarde"
+}
+```
+
 ## Requirements
 
 - PHP 7.0 or higher
@@ -175,7 +191,8 @@ if ($response['ok']) {
 $response = $api->shortlinks()->createShortlink(
     "https://www.example.com/very-long-url",
     "My Shortlink",
-    "ACTIVE"
+    "ACTIVE",
+    "promoAlias"
 );
 
 if ($response['ok']) {
@@ -183,14 +200,18 @@ if ($response['ok']) {
 }
 ```
 
+> Pass `null` for the third parameter if you want to specify an alias while keeping the default `ACTIVE` status.
+> **Alias rules:** 1–30 printable characters, no spaces. Provide a custom alias only when you need a predictable slug; otherwise omit it and the platform will auto-generate one. Re-using the same alias on the same domain returns `500 Bad Request` from the ShortURL API. Shortlinks can be deactivated but **not** reactivated.
+> Names are trimmed and limited to 50 characters.
+
 #### List Shortlinks
 ```php
-$response = $api->shortlinks()->listShortlinks(
-    "2024-01-01",  // start date
-    "2024-12-31",  // end date
-    10,            // limit
-    -6             // timezone offset (UTC)
-);
+$response = $api->shortlinks()->listShortlinks(array(
+    'start_date' => '2024-01-01',
+    'end_date' => '2024-12-31',
+    'limit' => 10,
+    'offset' => -6
+));
 
 if ($response['ok']) {
     foreach ($response['data']['data'] as $shortlink) {
@@ -210,10 +231,94 @@ if ($response['ok']) {
 
 #### Update Shortlink Status
 ```php
-$response = $api->shortlinks()->updateShortlinkStatus("abc123", "INACTIVE");
+$response = $api->shortlinks()->updateShortlinkStatus(
+    "123ABC", // shortlink ID is required
+    "INACTIVE"
+);
 
 if ($response['ok']) {
-    echo "Status updated!\n";
+    echo "Shortlink deactivated!\n";
+}
+```
+
+### API Response Examples
+
+#### Create Shortlink - Success
+```json
+{
+  "success": true,
+  "message": "Shortlink created successfully",
+  "account_id": 12345,
+  "url_id": "123ABC",
+  "short_url": "https://shorturl-pais.com/123ABC",
+  "alias": "promoAlias",
+  "long_url": "https://www.example.com/very-long-url-with-parameters"
+}
+```
+
+#### List Shortlinks - Success
+```json
+{
+  "success": true,
+  "message": "Shortlinks retrieved successfully",
+  "data": [
+    {
+      "_id": "123ABC",
+      "account_uid": "abcde12345678kklm",
+      "name": "Enlace corto de prueba",
+      "status": "INACTIVE",
+      "base_url": "https://shorturl-pais.com/",
+      "short_url": "https://shorturl-pais.com/123ABC",
+      "alias": "promoAlias",
+      "long_url": "https://www.example.com/long-url-here",
+      "visits": 0,
+      "unique_visits": 0,
+      "preview_visits": 0,
+      "created_by": "SHORTLINK_API",
+      "reference_type": "SHORT_LINK",
+      "expiration": false,
+      "expiration_date": null,
+      "created_on": 1735689600000
+    }
+  ],
+  "account_id": 12345
+}
+```
+
+#### Get Shortlink by ID - Success
+```json
+{
+  "success": true,
+  "message": "Shortlink found",
+  "account_id": 12345,
+  "url_id": "123ABC",
+  "short_url": "https://shorturl-pais.com/123ABC",
+  "alias": "promoAlias",
+  "long_url": "https://www.example.com/long-url-with-parameters",
+  "name": "Example Shortlink",
+  "status": "ACTIVE",
+  "visits": 0,
+  "unique_visits": 0,
+  "preview_visits": 0,
+  "created_by": "SHORTLINK_API",
+  "created_on": 1735689600000
+}
+```
+
+#### Get Shortlink by ID - Not Found
+```json
+{
+  "success": false,
+  "message": "Shortlink not found"
+}
+```
+
+#### Rate Limit Exceeded
+When you create too many shortlinks in a short time window (default: 10 per minute per account):
+```json
+{
+  "code": 42900,
+  "error": "Ha excedido el límite de solicitudes. Intente nuevamente más tarde"
 }
 ```
 
@@ -265,8 +370,44 @@ Check the `/examples` directory for complete working examples:
 ## Testing
 
 Run examples from the command line:
+
+### Shortlinks Testing
+
 ```bash
+# Run default flow (list + create)
 php examples/shortlinks.php
+
+# Create a shortlink
+php examples/shortlinks.php create
+
+# List all shortlinks (no parameters)
+php examples/shortlinks.php list
+
+# List with limit only
+php examples/shortlinks.php list 20
+
+# List with limit and offset
+php examples/shortlinks.php list 20 -6
+
+# List by date range
+php examples/shortlinks.php date 2025-01-01 2025-12-31
+
+# List by date with limit and offset
+php examples/shortlinks.php date 2025-01-01 2025-12-31 20 -5
+
+# Get shortlink by ID
+php examples/shortlinks.php id 123ABC
+
+# Update shortlink status
+php examples/shortlinks.php update 123ABC INACTIVE
+
+# Test status validation
+php examples/shortlinks.php status
+```
+
+### Other Resources
+
+```bash
 php examples/messages.php
 php examples/contacts.php
 php examples/tags.php
