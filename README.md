@@ -1,6 +1,22 @@
 # SMS API PHP SDK
 
-A PHP SDK for interacting with the SMS API service. This SDK provides easy-to-use methods for managing contacts, sending messages, and handling tags with **perfect UTF-8 character support** 
+A PHP SDK for interacting with the SMS API service. This SDK provides easy-to-use methods for managing contacts, sending messages, handling tags, and creating shortlinks with perfect UTF-8 character support.
+
+## Rate Limits
+
+The API has rate limits to ensure fair usage:
+
+- **Shortlinks**: Maximum of 10 shortlinks created per minute per account (default)
+- When you exceed the limit, you'll receive a 403 error with code `42900`
+- **For inquiries or requests to increase the limit**: Please contact Technical Support directly through their support channels
+
+Example error response:
+```json
+{
+  "code": 42900,
+  "error": "Ha excedido el límite de solicitudes. Intente nuevamente más tarde"
+}
+```
 
 ## Requirements
 
@@ -18,20 +34,25 @@ require_once("path/to/src/SmsApi.php");
 
 ## Configuration
 
-Before using the SDK, you need to configure your API credentials. You'll need:
-- API Key
-- API Secret
-- API URL
+Before using the SDK, configure your API credentials using environment variables:
+
+```bash
+export API_KEY='your_api_key'
+export API_SECRET='your_api_secret'
+export URL='your_api_url'
+```
+
+Or set them in your PHP code:
 
 ```php
-// Your API credentials
-define('API_KEY', 'YOUR_API_KEY');
-define('API_SECRET', 'YOUR_API_SECRET');
-define('API_URL', 'YOUR_API_URL');
+$apiKey = getenv('API_KEY');
+$apiSecret = getenv('API_SECRET');
+$apiUrl = getenv('URL');
 
-// Initialize the API client with array responses
-$api = new SmsApi(API_KEY, API_SECRET, API_URL, true);
+$api = new SmsApi($apiKey, $apiSecret, $apiUrl, true);
 ```
+
+The last parameter `true` returns responses as associative arrays instead of objects.
 
 ## Features
 
@@ -44,35 +65,27 @@ $response = $api->contacts()->createContact(
     "502",         // country code
     "John",        // first name
     "Doe",         // last name (optional)
-    null,          // custom_field1 (optional)
-    null,          // custom_field2 (optional)
-    null,          // custom_field3 (optional)
-    null,          // custom_field4 (optional)
-    null           // custom_field5 (optional)
+    null           // custom fields (optional)
 );
 
 if ($response['ok']) {
     echo "Contact created successfully!\n";
-} else {
-    echo "Failed to create contact. Error: " . ($response['data']['error'] ?? 'Unknown error') . "\n";
 }
 ```
 
 #### Get Contacts
 ```php
 $response = $api->contacts()->getContacts(
-    '50212345678',     // query (phone number or name)
-    10,             // limit (optional)
-    0,              // start (optional)
-    'SUSCRIBED'     // status (optional)
+    '50212345678',     // query
+    10,                // limit
+    0,                 // start
+    'SUSCRIBED'        // status
 );
 
 if ($response['ok']) {
     foreach ($response['data'] as $contact) {
-        echo "Phone Number: " . $contact['phone_number'] . ", Name: " . $contact['full_name'] . "\n";
+        echo $contact['phone_number'] . "\n";
     }
-} else {
-    echo "Failed to get contacts. Error: " . ($response['data']['error'] ?? 'Unknown error') . "\n";
 }
 ```
 
@@ -80,21 +93,14 @@ if ($response['ok']) {
 ```php
 $response = $api->contacts()->updateContact(
     "50212345678",  // msisdn
-    "12345678",     // phone number (optional)
-    "502",          // country code (optional)
-    "John",         // first name (optional)
-    "Doe",          // last name (optional)
-    null,           // custom_field1 (optional)
-    null,           // custom_field2 (optional)
-    null,           // custom_field3 (optional)
-    null,           // custom_field4 (optional)
-    null            // custom_field5 (optional)
+    "12345678",     // phone number
+    "502",          // country code
+    "John",         // first name
+    "Doe"           // last name
 );
 
 if ($response['ok']) {
-    echo "Contact updated successfully!\n";
-} else {
-    echo "Failed to update contact. Error: " . ($response['data']['error'] ?? 'Unknown error') . "\n";
+    echo "Contact updated!\n";
 }
 ```
 
@@ -102,80 +108,37 @@ if ($response['ok']) {
 ```php
 $response = $api->contacts()->deleteContact("50212345678");
 if ($response['ok']) {
-    echo "Contact deleted successfully!\n";
-} else {
-    echo "Failed to delete contact. Error: " . ($response['data']['error'] ?? 'Unknown error') . "\n";
+    echo "Contact deleted!\n";
 }
 ```
 
 ### Message Management
 
-#### Send Message to Contact with UTF-8 Support
+#### Send Message to Contact
 ```php
-// Perfect UTF-8 character support - send messages with special characters
 $response = $api->messages()->sendToContact(
-    "50212345678",     // msisdn
-    "¡Hola! ¿Cómo estás? Café ñoño 🚀",    // message with UTF-8 characters
-    "123"             // id (optional)
+    "50212345678",
+    "Hello from PHP SDK!",
+    "123"
 );
 
 if ($response['ok']) {
-    echo "Message sent successfully!\n";
-} else {
-    echo "Failed to send message. Error: " . ($response['data']['error'] ?? 'Unknown error') . "\n";
-}
-```
-
-#### UTF-8 Character Examples
-
-The PHP SDK now perfectly handles all UTF-8 characters, just like JavaScript and Python:
-
-```php
-// Spanish characters
-"¡Hola! ¿Cómo estás? Adiós"
-
-// Accented letters
-"Café, niño, corazón, piñata"
-
-// Symbols and currency
-"Precio: €50, £40, ¥100, $30"
-
-// Mathematical symbols
-"Infinito: ∞, Plus/Minus: ±, Square root: √"
-```
-
-#### Send Message to Tag
-```php
-$response = $api->messages()->sendToTag(
-    ["test"],          // groups array
-    "Your message",    // message
-    "123aeiou"             // id (optional)
-);
-
-if ($response['ok']) {
-    echo "Message sent to tag successfully!\n";
-} else {
-    echo "Failed to send message to tag. Error: " . ($response['data']['error'] ?? 'Unknown error') . "\n";
+    echo "Message sent!\n";
 }
 ```
 
 #### Get Messages
 ```php
 $response = $api->messages()->getMessages(
-    "2024-01-01",     // start date
-    "2024-01-31",     // end date
-    10,               // limit (optional)
-    0,                // start (optional)
-    null,             // msisdn (optional)
-    null              // groupShortName (optional)
+    "2024-01-01",  // start date
+    "2024-01-31",  // end date
+    10             // limit
 );
 
 if ($response['ok']) {
     foreach ($response['data'] as $message) {
         echo $message['message'] . "\n";
     }
-} else {
-    echo "Failed to get messages. Error: " . ($response['data']['error'] ?? 'Unknown error') . "\n";
 }
 ```
 
@@ -183,76 +146,179 @@ if ($response['ok']) {
 
 #### Get Tags
 ```php
-$response = $api->tags()->getTags(
-    null,           // query (optional)
-    10,             // limit (optional)
-    0,              // start (optional)
-    false           // shortResults (optional)
-);
+$response = $api->tags()->getTags(null, 10, 0, false);
 
 if ($response['ok']) {
     foreach ($response['data'] as $tag) {
         echo $tag['name'] . "\n";
     }
-} else {
-    echo "Failed to get tags. Error: " . ($response['data']['error'] ?? 'Unknown error') . "\n";
 }
 ```
 
 #### Get Tag Contacts
 ```php
-$response = $api->tags()->getTagContacts(
-    "test",         // shortName
-    10,             // limit (optional)
-    0,              // offset (optional)
-    null,           // status (optional)
-    false           // shortResponse (optional)
-);
+$response = $api->tags()->getTagContacts("test", 10);
 
 if ($response['ok']) {
     foreach ($response['data'] as $contact) {
-        echo $contact['msisdn'] . " - " . $contact['full_name'] . "\n";
+        echo $contact['msisdn'] . "\n";
     }
-} else {
-    echo "Failed to get tag contacts. Error: " . ($response['data']['error'] ?? 'Unknown error') . "\n";
 }
 ```
 
 #### Add Tag to Contact
 ```php
-$response = $api->contacts()->addTagToContact(
-    '50212345678',    // msisdn
-    "test_tag"        // tag_name
-);
+$response = $api->contacts()->addTagToContact('50212345678', "vip");
 
 if ($response['ok']) {
-    echo "Tag added successfully!\n";
-} else {
-    echo "Failed to add tag. Error: " . ($response['data']['error'] ?? 'Unknown error') . "\n";
+    echo "Tag added!\n";
 }
 ```
 
 #### Remove Tag from Contact
 ```php
-$response = $api->contacts()->removeTagToContact(
-    '50212345678',    // msisdn
-    "test_tag"        // tag_name
-);
+$response = $api->contacts()->removeTagToContact('50212345678', "vip");
 
 if ($response['ok']) {
-    echo "Tag removed successfully!\n";
-} else {
-    echo "Failed to remove tag. Error: " . ($response['data']['error'] ?? 'Unknown error') . "\n";
+    echo "Tag removed!\n";
 }
 ```
 
-#### Delete Tag
+### Shortlink Management
+
+#### Create Shortlink
 ```php
-$response = $api->tags()->deleteTag("test_tag");
+$response = $api->shortlinks()->createShortlink(
+    "https://www.example.com/very-long-url",
+    "My Shortlink",
+    "ACTIVE",
+    "promoAlias"
+);
+
 if ($response['ok']) {
-    echo "Tag deleted successfully!\n";
-} else {
-    echo "Failed to delete tag. Error: " . ($response['data']['error'] ?? 'Unknown error') . "\n";
+    echo "Shortlink created: " . $response['data']['short_url'] . "\n";
+}
+```
+
+> Pass `null` for the third parameter if you want to specify an alias while keeping the default `ACTIVE` status.
+> **Alias rules:** 1–30 printable characters, no spaces. Provide a custom alias only when you need a predictable slug; otherwise omit it and the platform will auto-generate one. Re-using the same alias on the same domain returns `500 Bad Request` from the ShortURL API. Shortlinks can be deactivated but **not** reactivated.
+> Names are trimmed and limited to 50 characters.
+
+#### List Shortlinks
+```php
+$response = $api->shortlinks()->listShortlinks(array(
+    'start_date' => '2024-01-01',
+    'end_date' => '2024-12-31',
+    'limit' => 10,
+    'offset' => -6
+));
+
+if ($response['ok']) {
+    foreach ($response['data']['data'] as $shortlink) {
+        echo $shortlink['name'] . " - " . $shortlink['short_url'] . "\n";
+    }
+}
+```
+
+#### Get Shortlink by ID
+```php
+$response = $api->shortlinks()->getShortlinkById("abc123");
+
+if ($response['ok']) {
+    echo "Shortlink: " . $response['data']['short_url'] . "\n";
+}
+```
+
+#### Update Shortlink Status
+```php
+$response = $api->shortlinks()->updateShortlinkStatus(
+    "123ABC", // shortlink ID is required
+    "INACTIVE"
+);
+
+if ($response['ok']) {
+    echo "Shortlink deactivated!\n";
+}
+```
+
+### API Response Examples
+
+#### Create Shortlink - Success
+```json
+{
+  "success": true,
+  "message": "Shortlink created successfully",
+  "account_id": 12345,
+  "url_id": "123ABC",
+  "short_url": "https://shorturl-pais.com/123ABC",
+  "alias": "promoAlias",
+  "long_url": "https://www.example.com/very-long-url-with-parameters"
+}
+```
+
+#### List Shortlinks - Success
+```json
+{
+  "success": true,
+  "message": "Shortlinks retrieved successfully",
+  "data": [
+    {
+      "_id": "123ABC",
+      "account_uid": "abcde12345678kklm",
+      "name": "Enlace corto de prueba",
+      "status": "INACTIVE",
+      "base_url": "https://shorturl-pais.com/",
+      "short_url": "https://shorturl-pais.com/123ABC",
+      "alias": "promoAlias",
+      "long_url": "https://www.example.com/long-url-here",
+      "visits": 0,
+      "unique_visits": 0,
+      "preview_visits": 0,
+      "created_by": "SHORTLINK_API",
+      "reference_type": "SHORT_LINK",
+      "expiration": false,
+      "expiration_date": null,
+      "created_on": 1735689600000
+    }
+  ],
+  "account_id": 12345
+}
+```
+
+#### Get Shortlink by ID - Success
+```json
+{
+  "success": true,
+  "message": "Shortlink found",
+  "account_id": 12345,
+  "url_id": "123ABC",
+  "short_url": "https://shorturl-pais.com/123ABC",
+  "alias": "promoAlias",
+  "long_url": "https://www.example.com/long-url-with-parameters",
+  "name": "Example Shortlink",
+  "status": "ACTIVE",
+  "visits": 0,
+  "unique_visits": 0,
+  "preview_visits": 0,
+  "created_by": "SHORTLINK_API",
+  "created_on": 1735689600000
+}
+```
+
+#### Get Shortlink by ID - Not Found
+```json
+{
+  "success": false,
+  "message": "Shortlink not found"
+}
+```
+
+#### Rate Limit Exceeded
+When you create too many shortlinks in a short time window (default: 10 per minute per account):
+```json
+{
+  "code": 42900,
+  "error": "Ha excedido el límite de solicitudes. Intente nuevamente más tarde"
 }
 ```
 
@@ -261,60 +327,95 @@ if ($response['ok']) {
 All API responses follow this structure:
 ```php
 $response = [
-    'ok' => true,                    // boolean indicating success/failure
-    'data' => [/* the response data */], // array containing the response data
-    'data' => ['error' => '...']     // error message if ok is false
+    'code' => 200,           // HTTP status code
+    'status' => 'OK',        // HTTP status text
+    'ok' => true,  // boolean indicating success
+    'data' => [...],        // response data
 ];
 ```
 
 ## Error Handling
 
-Always check the response status before proceeding:
+Check response status before proceeding:
 ```php
 if ($response['ok']) {
     // Success
     // Process $response['data']
 } else {
     // Error
-    echo "Error: " . ($response['data']['error'] ?? 'Unknown error');
+    echo "Error code: " . $response['code'] . "\n";
 }
 ```
 
-## 🌍 UTF-8 and Cross-SDK Compatibility
+## UTF-8 Support
 
-This PHP SDK provides **perfect UTF-8 character handling**, matching the behavior of JavaScript and Python SDKs:
+This PHP SDK supports UTF-8 characters:
+- Spanish characters: `¡¿`
+- Accented letters: `áéíóú ñÑ`
+- Currency symbols: `€¢£¥`
+- Mathematical symbols: `∞±√`
+- All Unicode characters
 
-### ✅ What Works Perfectly
-- **Spanish characters**: `¡¿` (inverted punctuation)
-- **Accented letters**: `áéíóú ñÑ`
-- **Currency symbols**: `€¢£¥`
-- **Mathematical symbols**: `∞±√`
-- **Emojis**: `🚀🎉💻`
-- **All Unicode characters**
+Technical implementation uses `JSON_UNESCAPED_UNICODE` for proper character encoding.
 
-### 🔧 Technical Implementation
-- **JSON Serialization**: Uses `JSON_UNESCAPED_UNICODE` (equivalent to Python's `ensure_ascii=False`)
-- **HTTP Headers**: Proper `Content-Type: application/json; charset=utf-8`
-- **Character Encoding**: UTF-8 throughout the entire request/response cycle
-
-### 🤝 Cross-SDK Compatibility
-The PHP SDK now generates identical:
-- **HTTP signatures** as JavaScript and Python SDKs
-- **JSON payloads** without character escaping
-- **API requests** with consistent UTF-8 encoding
-
-## Examples and Testing
+## Examples
 
 Check the `/examples` directory for complete working examples:
-- `quickstart.php`: Basic operations (create contact, send message, get messages)
-- `contacts.php`: Contact management examples
-- `messages.php`: Message handling examples with UTF-8 characters
-- `tags.php`: Tag management examples
-- `utf8_test.php`: **Comprehensive UTF-8 testing** (recommended for verification)
+- `quickstart.php`: Basic operations
+- `contacts.php`: Contact management
+- `messages.php`: Message handling
+- `tags.php`: Tag management
+- `shortlinks.php`: Shortlink operations
+
+## Testing
+
+Run examples from the command line:
+
+### Shortlinks Testing
+
+```bash
+# Run default flow (list + create)
+php examples/shortlinks.php
+
+# Create a shortlink
+php examples/shortlinks.php create
+
+# List all shortlinks (no parameters)
+php examples/shortlinks.php list
+
+# List with limit only
+php examples/shortlinks.php list 20
+
+# List with limit and offset
+php examples/shortlinks.php list 20 -6
+
+# List by date range
+php examples/shortlinks.php date 2025-01-01 2025-12-31
+
+# List by date with limit and offset
+php examples/shortlinks.php date 2025-01-01 2025-12-31 20 -5
+
+# Get shortlink by ID
+php examples/shortlinks.php id 123ABC
+
+# Update shortlink status
+php examples/shortlinks.php update 123ABC INACTIVE
+
+# Test status validation
+php examples/shortlinks.php status
+```
+
+### Other Resources
+
+```bash
+php examples/messages.php
+php examples/contacts.php
+php examples/tags.php
+```
 
 ## Support
 
-For any issues or questions, please contact the API provider's support team.
+For issues or questions, contact the API provider's support team.
 
 ## License
 
